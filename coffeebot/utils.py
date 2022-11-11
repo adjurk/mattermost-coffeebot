@@ -46,7 +46,15 @@ def get_channel_members(driver, team_name, channel_name):
     # same as B <-> A)
     members.sort()
 
-    return members
+    # Since Mattermost API doesn't provide a proper way to check if a user
+    # is inactive, we'll need to fetch all users in the team and filter
+    # by only those who are inactive, then subtract them from members.
+    response_deactivated = driver.users.get_users(params={"inactive":"true"})
+    deactivated_users = [
+            user['id'] for user in response_deactivated]
+    filtered_members = list(set(members) - set(deactivated_users))
+
+    return filtered_members
 
 
 def create_users(members):
